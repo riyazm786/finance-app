@@ -5,18 +5,26 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import AddRecord from './pages/AddRecord';
 import History from './pages/History';
-import ChartsView from './pages/ChartsView';
+import EMICalculator from './pages/EMICalculator';
+import TaxCalculator from './pages/TaxCalculator';
+import Portfolio from './pages/Portfolio';
 
 function App() {
   return (
     <>
       <Navbar />
-      <div className="container page-enter-active">
+      <div className="container animate-fade-up">
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/add" element={<AddRecord />} />
           <Route path="/history" element={<History />} />
-          <Route path="/charts" element={<ChartsView />} />
+          <Route path="/emi" element={<EMICalculator />} />
+          <Route path="/tax" element={<TaxCalculator />} />
+          <Route path="/portfolio" element={<Portfolio />} />
+          
+          <Route path="/analytics" element={<Dashboard />} /> {/* Placeholder */}
+          <Route path="/profile" element={<Login />} /> {/* Placeholder */}
+          
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Routes>

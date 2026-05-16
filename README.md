@@ -1,40 +1,70 @@
-# Finance & Salary Management Web Application
+# 💰 FinTrack - Finance & Salary Management App
 
-A full-stack MERN web application to track monthly salary and expenses with a sleek, vibrant "Glassmorphism" UI.
+![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)
+![MERN Stack](https://img.shields.io/badge/Stack-MERN-blue)
+![JWT Auth](https://img.shields.io/badge/Auth-JWT-orange)
 
-## Features
-- **Authentication**: JWT based user login & registration.
-- **Dashboard**: Dynamic calculation of Total Income, Total Expenses, and Net Savings.
-- **Transactions**: Add new income or expenses categorized by type.
-- **History**: Filterable tabular view of all expenses.
-- **Charts**: Visual representation of expense breakdown (Pie Chart) and monthly trends (Bar Chart) using Chart.js.
+A professional full-stack fintech web application 
+to manage salary, track expenses, and get smart 
+investment guidance.
 
-## Tech Stack
-- **Frontend**: React (Vite), Vanilla CSS (Custom Design System), React-Router-Dom, Chart.js.
-- **Backend**: Node.js, Express.js.
-- **Database**: MongoDB (Mongoose).
-- **Authentication**: JWT & bcrypt.
+## 🌐 Live Links
+- Frontend: https://finance-mfs0o76og-riyazm786s-projects.vercel.app
+- Backend API: https://finance-app-iej2.onrender.com
+- GitHub: https://github.com/riyazm786/finance-app
 
-## Local Setup Instructions
+## ✨ Features
+✅ JWT Authentication (Register/Login/Logout)
+✅ Financial Dashboard with metric cards
+✅ Income & Expense tracking with categories
+✅ Transaction history with filters
+✅ Pie chart - Expense breakdown
+✅ Bar chart - Monthly Income vs Expense
+✅ Investment Guide (Stocks, SIP, Gold, FD, PPF)
+✅ Savings Calculator
+✅ EMI Calculator
+✅ 50-30-20 Budget Planner
+✅ AI Financial Tips
+✅ Mobile Responsive UI
+✅ Dark theme Glassmorphism design
 
-1. **Clone the repository:**
-   ```bash
-   git clone <your-repo-link>
-   cd finance-app
-   ```
+## 🛠️ Tech Stack
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React.js (Vite) |
+| Styling | CSS3, Glassmorphism |
+| Charts | Chart.js |
+| Backend | Node.js + Express.js |
+| Database | MongoDB (Mongoose) |
+| Auth | JWT + bcrypt |
+| Deployment | Vercel + Render |
 
-2. **Backend Setup:**
-   ```bash
-   cd backend
-   npm install
-   # Make sure to configure your .env file with MONGO_URI and JWT_SECRET
-   npm start
-   ```
+## 📁 Project Structure
+finance-app/
+├── frontend/
+│   ├── src/
+│   │   ├── pages/
+│   │   ├── components/
+│   │   └── context/
+└── backend/
+    ├── models/
+    ├── routes/
+    └── middleware/
 
-3. **Frontend Setup:**
-   ```bash
-   cd frontend
-   npm install
-   # Create a .env file with: VITE_API_URL=http://localhost:5000 (or your deployed backend URL)
-   npm run dev
-   ```
+## ⚙️ Setup Instructions
+### Backend
+cd backend
+npm install
+create .env with MONGO_URI and JWT_SECRET
+node server.js
+
+### Frontend  
+cd frontend
+npm install
+npm run dev
+
+## 📸 Screenshots
+(Add screenshots of Login, Dashboard, Charts pages)
+
+## 👨💻 Developer
+Riyaz M | Full Stack Mini Project 2026
