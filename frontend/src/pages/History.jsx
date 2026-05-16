@@ -75,7 +75,7 @@ export default function History() {
               </tr>
             ) : (
               filteredExpenses.map(expense => (
-                <tr key={expense.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <tr key={expense._id || expense.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <td style={{ padding: '1rem' }}>{expense.date}</td>
                   <td style={{ padding: '1rem' }}>
                     <span style={{ 
@@ -92,7 +92,7 @@ export default function History() {
                   <td style={{ padding: '1rem', fontWeight: 'bold' }}>₹{expense.amount}</td>
                   <td style={{ padding: '1rem' }}>
                     <button 
-                      onClick={() => deleteExpense(expense.id)}
+                      onClick={() => deleteExpense(expense._id || expense.id)}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent-danger)' }}
                     >
                       <Trash2 size={18} />

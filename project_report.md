@@ -79,6 +79,20 @@ We designed three relational collections:
 
 By storing `userId` on every financial record, we ensure horizontal scalability and strict data isolation between different users.
 
----
+## v. Deployment & Output
 
-*(Section v will be populated as we progress to deployment)*
+### 1. Backend Deployment
+The Node.js/Express REST API is deployed on **Render** (Free Tier).
+- **Live Backend URL:** `https://finance-app-iej2.onrender.com`
+- Environment variables (`MONGO_URI`, `JWT_SECRET`) were securely configured in the Render dashboard.
+
+### 2. Frontend Deployment & Integration
+The Vite React app is prepared for deployment to platforms like **Vercel** or **Netlify**.
+- **Integration:** A `.env` file was created in the frontend containing `VITE_API_URL=https://finance-app-iej2.onrender.com`.
+- The `FinanceContext.jsx` file was refactored from using browser `localStorage` to using the browser `fetch` API, sending HTTP requests to the live backend with the JWT token injected into the `Authorization` headers.
+
+### 3. Source Control
+The complete source code (Frontend and Backend) is hosted on GitHub. A comprehensive `README.md` is included in the repository root detailing the tech stack, features, and local setup instructions.
+
+---
+**End of Project Report**
