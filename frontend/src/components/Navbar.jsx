@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Wallet, LayoutDashboard, Calculator, Briefcase, BarChart2, User, Landmark } from 'lucide-react';
+import { Wallet, LayoutDashboard, Calculator, Briefcase, BarChart2, User, Landmark, History as HistoryIcon } from 'lucide-react';
 
 export default function Navbar() {
   const location = useLocation();
@@ -15,7 +15,7 @@ export default function Navbar() {
         <div className="navbar-links" style={{ display: 'flex', alignItems: 'center' }}>
           <Link to="/" className={`nav-link ${isActive('/')}`}>Dashboard</Link>
           <Link to="/portfolio" className={`nav-link ${isActive('/portfolio')}`}>Portfolio</Link>
-          <Link to="/analytics" className={`nav-link ${isActive('/analytics')}`}>Analytics</Link>
+          <Link to="/history" className={`nav-link ${isActive('/history')}`}>History</Link>
           <Link to="/emi" className={`nav-link ${isActive('/emi')}`}>EMI Calc</Link>
           <Link to="/tax" className={`nav-link ${isActive('/tax')}`}>Tax Calc</Link>
           
@@ -37,9 +37,9 @@ export default function Navbar() {
           <Briefcase size={24} />
           <span>Portfolio</span>
         </Link>
-        <Link to="/analytics" className={`mobile-nav-item ${isActive('/analytics')}`}>
-          <BarChart2 size={24} />
-          <span>Stats</span>
+        <Link to="/history" className={`mobile-nav-item ${isActive('/history')}`}>
+          <HistoryIcon size={24} />
+          <span>History</span>
         </Link>
         <Link to="/emi" className={`mobile-nav-item ${isActive('/emi')}`}>
           <Landmark size={24} />

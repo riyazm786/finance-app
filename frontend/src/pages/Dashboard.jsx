@@ -1,71 +1,108 @@
 import { useState, useEffect } from 'react';
-import { useFinance } from '../context/FinanceContext';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import { 
-  TrendingUp, TrendingDown, Wallet, PlusCircle, MinusCircle, 
-  Activity, Target, ShieldCheck, Zap, Bell, Calendar, ChevronRight, MessageSquare
+  PlusCircle, MinusCircle, Wallet, TrendingUp, TrendingDown,
+  Calendar, Clock
 } from 'lucide-react';
-import {
-  Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, PointElement, LineElement, Filler
-} from 'chart.js';
-import { Doughnut, Bar } from 'react-chartjs-2';
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, PointElement, LineElement, Filler);
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function Dashboard() {
-  const { totalIncome, totalExpense, savings, expenses, incomes } = useFinance();
+  const [summary, setSummary] = useState({
+    totalIncome: 0, totalExpenses: 0, netSavings: 0,
+    monthIncome: 0, monthExpenses: 0, monthSavings: 0,
+    biggestExpenseCategory: 'N/A',
+    recentTransactions: []
+  });
 
-  // AI Advisor Rotating Tips
-  const [tipIndex, setTipIndex] = useState(0);
-  const aiTips = [
-    "💡 You spent ₹8,000 on food this month. Try to reduce by 20% to save ₹1,600.",
-    "📈 You are saving 21% of income. Financial experts recommend 30%.",
-    "🚀 Start a SIP of ₹2,000/month in index funds to build ₹8.7L in 10 years.",
-    "🏠 Your biggest expense is Rent (42%). Consider house sharing to reduce costs."
-  ];
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTipIndex(prev => (prev + 1) % aiTips.length);
-    }, 6000);
-    return () => clearInterval(timer);
+    const fetchDashboard = async () => {
+      try {
+        const token = localStorage.getItem('fin_token') || localStorage.getItem('token');
+        if (!token) return;
+        
+        const headers = { Authorization: `Bearer ${token}` };
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear();
+        
+        const [incomeRes, expenseRes] = await Promise.all([
+          axios.get(`${API_URL}/api/income`, { headers }),
+          axios.get(`${API_URL}/api/expenses`, { headers })
+        ]);
+        
+        const incomes = incomeRes.data;
+        const expenses = expenseRes.data;
+        
+        // All time totals
+        const totalIncome = incomes.reduce((s,i) => s + i.amount, 0);
+        const totalExpenses = expenses.reduce((s,e) => s + e.amount, 0);
+        
+        // This month
+        const monthIncomes = incomes.filter(i => {
+          const d = new Date(i.createdAt || i.date || i.year + "-" + i.month); // fallback for dates
+          return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
+        });
+        const monthIncome = monthIncomes.reduce((s,i) => s + i.amount, 0);
+          
+        const monthExpensesArr = expenses.filter(e => {
+          const d = new Date(e.createdAt || e.date);
+          return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
+        });
+        const monthExpenses = monthExpensesArr.reduce((s,e) => s + e.amount, 0);
+        
+        // Biggest expense category this month
+        const catTotals = monthExpensesArr.reduce((acc, exp) => {
+          acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
+          return acc;
+        }, {});
+        
+        let biggestCat = 'N/A';
+        let maxAmt = 0;
+        for(let cat in catTotals) {
+          if(catTotals[cat] > maxAmt) {
+            maxAmt = catTotals[cat];
+            biggestCat = cat;
+          }
+        }
+        
+        // Recent transactions (combined, sorted newest first)
+        const allTx = [
+          ...incomes.map(i => ({...i, type:'income', date: i.createdAt || i.date || new Date().toISOString()})),
+          ...expenses.map(e => ({...e, type:'expense', date: e.createdAt || e.date || new Date().toISOString()}))
+        ].sort((a,b) => new Date(b.date) - new Date(a.date))
+         .slice(0, 5);
+        
+        setSummary({
+          totalIncome, totalExpenses,
+          netSavings: totalIncome - totalExpenses,
+          monthIncome, monthExpenses,
+          monthSavings: monthIncome - monthExpenses,
+          biggestExpenseCategory: biggestCat,
+          recentTransactions: allTx
+        });
+      } catch (err) {
+        console.error("Failed to fetch dashboard data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchDashboard();
   }, []);
 
   const formatCurrency = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 
-  // MOCK Smart Widget Data
-  const netWorth = 850000; // Assets - Liabilities
-  const dailyLimit = 1500;
-  const todaySpent = 850;
-  const spendInsight = "+14%";
-  
-  // 50-30-20 Rule Calculations
-  const needsBudget = totalIncome * 0.5 || 25000;
-  const wantsBudget = totalIncome * 0.3 || 15000;
-  const savingsBudget = totalIncome * 0.2 || 10000;
+  const savingsRate = summary.totalIncome > 0 
+    ? Math.round((summary.netSavings / summary.totalIncome) * 100) 
+    : 0;
 
-  // Approximate category splits for the rule
-  const catTotals = expenses.reduce((acc, exp) => {
-    acc[exp.category] = (acc[exp.category] || 0) + parseFloat(exp.amount);
-    return acc;
-  }, {});
-
-  const needsSpent = (catTotals['Rent'] || 0) + (catTotals['Food'] || 0);
-  const wantsSpent = (catTotals['Shopping'] || 0) + (catTotals['Subscriptions'] || 0);
-  const savingsActual = savings > 0 ? savings : 0;
-
-  const getPercent = (spent, budget) => Math.min((spent / budget) * 100, 100);
-
-  // Chart Data
-  const barData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [
-      { label: 'Income', data: [40000, 42000, 45000, 45000, 48000, 50000], backgroundColor: '#10B981', borderRadius: 4 },
-      { label: 'Expense', data: [25000, 28000, 24000, 30000, 26000, 29000], backgroundColor: '#EF4444', borderRadius: 4 }
-    ]
-  };
-
-  const chartOptions = { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false }, ticks: { color: '#94A3B8' } }, y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94A3B8' } } }, plugins: { legend: { labels: { color: '#F8FAFC' } } } };
+  if (loading) {
+    return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading dashboard...</div>;
+  }
 
   return (
     <div className="dash-grid animate-fade-up">
@@ -73,8 +110,8 @@ export default function Dashboard() {
       {/* Header */}
       <div className="col-span-12 flex-between" style={{ marginBottom: '1rem' }}>
         <div>
-          <h2 style={{ fontSize: '2.2rem' }}>Hello, Riyaz 👋</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>Here is your financial briefing for today.</p>
+          <h2 style={{ fontSize: '2.2rem' }}>Dashboard 👋</h2>
+          <p style={{ color: 'var(--text-secondary)' }}>Your financial overview based on real data.</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <Link to="/add" className="btn btn-success"><PlusCircle size={18}/> Add Income</Link>
@@ -82,115 +119,98 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* --- 1. AI FINANCIAL ADVISOR --- */}
+      {/* --- 1. THIS MONTH SECTION --- */}
       <div className="col-span-12">
-        <div className="ai-advisor-box">
-          <div style={{ padding: '0.75rem', background: 'rgba(139, 92, 246, 0.2)', borderRadius: '50%' }}>
-            <MessageSquare color="var(--accent-primary)" size={24} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <p style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>AI Financial Advisor</p>
-            <p style={{ fontSize: '1rem', color: 'var(--text-primary)', marginTop: '0.25rem', transition: 'opacity 0.5s ease-in-out' }} key={tipIndex}>
-              {aiTips[tipIndex]}
-            </p>
-          </div>
-        </div>
+        <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Calendar color="var(--accent-primary)" size={22}/> This Month
+        </h3>
       </div>
 
-      {/* --- 2. SMART WIDGETS (Row 1) --- */}
-      <div className="col-span-3 glass-card" style={{ borderTop: '4px solid var(--accent-primary)' }}>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Net Worth</p>
-        <h3 className="gradient-text" style={{ fontSize: '2rem', marginTop: '0.25rem' }}>{formatCurrency(netWorth)}</h3>
-        <p style={{ fontSize: '0.75rem', color: 'var(--accent-success)', marginTop: '0.5rem' }}>+2.4% vs last month</p>
+      <div className="col-span-3 glass-card" style={{ borderTop: '4px solid var(--accent-success)' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Income This Month</p>
+        <h3 className="text-success" style={{ fontSize: '2rem', marginTop: '0.25rem' }}>{formatCurrency(summary.monthIncome)}</h3>
       </div>
 
       <div className="col-span-3 glass-card" style={{ borderTop: '4px solid var(--accent-danger)' }}>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Spending Insight</p>
-        <h3 className="text-danger" style={{ fontSize: '1.8rem', marginTop: '0.25rem' }}>{spendInsight}</h3>
-        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>You spent 14% more than last month.</p>
-      </div>
-
-      <div className="col-span-3 glass-card" style={{ borderTop: '4px solid var(--accent-warning)' }}>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Daily Spending Limit</p>
-        <h3 style={{ fontSize: '1.8rem', marginTop: '0.25rem', color: todaySpent > dailyLimit ? 'var(--accent-danger)' : 'var(--text-primary)' }}>
-          {formatCurrency(todaySpent)} <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>/ {formatCurrency(dailyLimit)}</span>
-        </h3>
-        <div className="progress-bg" style={{ marginTop: '0.5rem' }}>
-          <div className="progress-fill" style={{ width: `${getPercent(todaySpent, dailyLimit)}%`, background: todaySpent > dailyLimit ? 'var(--accent-danger)' : 'var(--accent-warning)' }}></div>
-        </div>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Expenses This Month</p>
+        <h3 className="text-danger" style={{ fontSize: '2rem', marginTop: '0.25rem' }}>{formatCurrency(summary.monthExpenses)}</h3>
       </div>
 
       <div className="col-span-3 glass-card" style={{ borderTop: '4px solid var(--accent-info)' }}>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Next Expected Hike</p>
-        <h3 className="text-info" style={{ fontSize: '1.8rem', marginTop: '0.25rem', color: 'var(--accent-info)' }}>+12%</h3>
-        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Estimated based on industry avg.</p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Savings This Month</p>
+        <h3 className="text-info" style={{ fontSize: '2rem', marginTop: '0.25rem' }}>{formatCurrency(summary.monthSavings)}</h3>
       </div>
 
-      {/* --- 3. BUDGET PLANNER (50-30-20 RULE) --- */}
-      <div className="col-span-8 glass-card">
-        <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Target color="var(--accent-success)" size={22}/> 50-30-20 Budget Planner</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '2rem' }}>
-          
-          {/* NEEDS */}
-          <div>
-            <div className="flex-between" style={{ marginBottom: '0.5rem' }}>
-              <span style={{ fontWeight: 'bold' }}>Needs (50%)</span>
-              <span className="text-danger">{formatCurrency(needsSpent)}</span>
-            </div>
-            <div className="progress-bg"><div className="progress-fill" style={{ width: `${getPercent(needsSpent, needsBudget)}%`, background: 'var(--accent-danger)' }}></div></div>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem', textAlign: 'right' }}>Limit: {formatCurrency(needsBudget)}</p>
-          </div>
-
-          {/* WANTS */}
-          <div>
-            <div className="flex-between" style={{ marginBottom: '0.5rem' }}>
-              <span style={{ fontWeight: 'bold' }}>Wants (30%)</span>
-              <span className="text-warning" style={{ color: 'var(--accent-warning)' }}>{formatCurrency(wantsSpent)}</span>
-            </div>
-            <div className="progress-bg"><div className="progress-fill" style={{ width: `${getPercent(wantsSpent, wantsBudget)}%`, background: 'var(--accent-warning)' }}></div></div>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem', textAlign: 'right' }}>Limit: {formatCurrency(wantsBudget)}</p>
-          </div>
-
-          {/* SAVINGS */}
-          <div>
-            <div className="flex-between" style={{ marginBottom: '0.5rem' }}>
-              <span style={{ fontWeight: 'bold' }}>Savings (20%)</span>
-              <span className="text-success">{formatCurrency(savingsActual)}</span>
-            </div>
-            <div className="progress-bg"><div className="progress-fill" style={{ width: `${getPercent(savingsActual, savingsBudget)}%`, background: 'var(--accent-success)' }}></div></div>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem', textAlign: 'right' }}>Goal: {formatCurrency(savingsBudget)}</p>
-          </div>
-
-        </div>
+      <div className="col-span-3 glass-card" style={{ borderTop: '4px solid var(--accent-warning)' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Biggest Expense</p>
+        <h3 className="text-warning" style={{ fontSize: '1.8rem', marginTop: '0.25rem' }}>{summary.biggestExpenseCategory}</h3>
       </div>
 
-      {/* --- 4. UPCOMING BILLS & EMIs --- */}
-      <div className="col-span-4 glass-card">
-        <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Bell color="var(--accent-warning)" size={20}/> Action Needed</h3>
+      {/* --- 2. ALL TIME SECTION --- */}
+      <div className="col-span-12" style={{ marginTop: '1.5rem' }}>
+        <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Wallet color="var(--accent-primary)" size={22}/> All Time Summary
+        </h3>
+      </div>
+
+      <div className="col-span-3 glass-card" style={{ borderTop: '4px solid var(--accent-success)' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Total Income</p>
+        <h3 className="text-success" style={{ fontSize: '2rem', marginTop: '0.25rem' }}>{formatCurrency(summary.totalIncome)}</h3>
+      </div>
+
+      <div className="col-span-3 glass-card" style={{ borderTop: '4px solid var(--accent-danger)' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Total Expenses</p>
+        <h3 className="text-danger" style={{ fontSize: '2rem', marginTop: '0.25rem' }}>{formatCurrency(summary.totalExpenses)}</h3>
+      </div>
+
+      <div className="col-span-3 glass-card" style={{ borderTop: '4px solid var(--accent-info)' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Net Savings</p>
+        <h3 className="text-info" style={{ fontSize: '2rem', marginTop: '0.25rem' }}>{formatCurrency(summary.netSavings)}</h3>
+      </div>
+
+      <div className="col-span-3 glass-card" style={{ borderTop: '4px solid var(--accent-primary)' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Savings Rate</p>
+        <h3 className="gradient-text" style={{ fontSize: '2rem', marginTop: '0.25rem' }}>{savingsRate}%</h3>
+        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>of total income saved</p>
+      </div>
+
+      {/* --- 3. RECENT TRANSACTIONS --- */}
+      <div className="col-span-12 glass-card" style={{ marginTop: '1.5rem' }}>
+        <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Clock color="var(--accent-primary)" size={20}/> Recent Transactions
+        </h3>
         
-        <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(239, 68, 68, 0.2)', marginBottom: '1rem' }}>
-          <div className="flex-between">
-            <span style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Calendar size={16}/> Car Loan EMI</span>
-            <span style={{ fontWeight: 'bold' }}>{formatCurrency(8500)}</span>
+        {summary.recentTransactions.length === 0 ? (
+          <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '1rem' }}>No transactions found. Add your first record!</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {summary.recentTransactions.map((tx, idx) => (
+              <div key={idx} style={{ 
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+                padding: '1rem', background: 'rgba(255, 255, 255, 0.03)', 
+                borderRadius: 'var(--radius-md)', border: '1px solid var(--glass-border)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ 
+                    background: tx.type === 'income' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                    padding: '0.75rem', borderRadius: '50%'
+                  }}>
+                    {tx.type === 'income' ? <TrendingUp color="var(--accent-success)" size={20}/> : <TrendingDown color="var(--accent-danger)" size={20}/>}
+                  </div>
+                  <div>
+                    <h4 style={{ fontWeight: 'bold' }}>{tx.category || tx.source}</h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                      {new Date(tx.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </p>
+                  </div>
+                </div>
+                <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: tx.type === 'income' ? 'var(--accent-success)' : 'var(--accent-danger)' }}>
+                  {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                </div>
+              </div>
+            ))}
           </div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Due in 3 days • 24 months left</p>
-        </div>
-
-        <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--glass-border)' }}>
-          <div className="flex-between">
-            <span style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Zap size={16}/> Electricity Bill</span>
-            <span style={{ fontWeight: 'bold' }}>{formatCurrency(2100)}</span>
-          </div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Due in 8 days</p>
-        </div>
-      </div>
-
-      {/* --- 5. MONTHLY TREND CHART --- */}
-      <div className="col-span-12 glass-card" style={{ marginTop: '1rem' }}>
-        <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Activity color="var(--accent-primary)" size={20}/> 6-Month Analytics</h3>
-        <div style={{ height: '300px' }}>
-          <Bar data={barData} options={chartOptions} />
-        </div>
+        )}
       </div>
 
     </div>
