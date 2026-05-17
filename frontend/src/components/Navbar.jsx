@@ -15,8 +15,8 @@ export default function Navbar() {
         <div className="navbar-links" style={{ display: 'flex', alignItems: 'center' }}>
           <Link to="/" className={`nav-link ${isActive('/')}`}>Dashboard</Link>
           <Link to="/portfolio" className={`nav-link ${isActive('/portfolio')}`}>Portfolio</Link>
-          <Link to="/income" className={`nav-link ${isActive('/income')}`}>Income</Link>
-          <Link to="/expense" className={`nav-link ${isActive('/expense')}`}>Expense</Link>
+          <Link to="/income" className={`nav-link ${isActive('/income')}`} style={{ color: 'var(--accent-success)' }}>Income</Link>
+          <Link to="/expense" className={`nav-link ${isActive('/expense')}`} style={{ color: 'var(--accent-danger)' }}>Expense</Link>
           <Link to="/history" className={`nav-link ${isActive('/history')}`}>History</Link>
           <Link to="/emi" className={`nav-link ${isActive('/emi')}`}>EMI Calc</Link>
           <Link to="/tax" className={`nav-link ${isActive('/tax')}`}>Tax Calc</Link>
@@ -39,11 +39,11 @@ export default function Navbar() {
           <Briefcase size={24} />
           <span>Portfolio</span>
         </Link>
-        <Link to="/income" className={`mobile-nav-item ${isActive('/income')}`}>
+        <Link to="/income" className={`mobile-nav-item ${isActive('/income')}`} style={{ color: 'var(--accent-success)' }}>
           <TrendingUp size={24} />
           <span>Income</span>
         </Link>
-        <Link to="/expense" className={`mobile-nav-item ${isActive('/expense')}`}>
+        <Link to="/expense" className={`mobile-nav-item ${isActive('/expense')}`} style={{ color: 'var(--accent-danger)' }}>
           <TrendingDown size={24} />
           <span>Expense</span>
         </Link>
