@@ -6,6 +6,7 @@ import Register from './pages/Register';
 import AddRecord from './pages/AddRecord';
 import History from './pages/History';
 import IncomePage from './pages/IncomePage';
+import ExpensePage from './pages/ExpensePage';
 import EMICalculator from './pages/EMICalculator';
 import TaxCalculator from './pages/TaxCalculator';
 import Portfolio from './pages/Portfolio';
@@ -19,6 +20,7 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/add" element={<AddRecord />} />
           <Route path="/income" element={<IncomePage />} />
+          <Route path="/expense" element={<ExpensePage />} />
           <Route path="/history" element={<History />} />
           <Route path="/emi" element={<EMICalculator />} />
           <Route path="/tax" element={<TaxCalculator />} />
