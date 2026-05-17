@@ -44,15 +44,9 @@ router.post('/', auth, async (req, res) => {
 // @access  Private
 router.delete('/:id', auth, async (req, res) => {
   try {
-    let expense = await Expense.findById(req.params.id);
-    if (!expense) return res.status(404).json({ msg: 'Expense not found' });
+    const expense = await Expense.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
+    if (!expense) return res.status(404).json({ msg: 'Expense not found or not authorized' });
 
-    // Make sure user owns expense
-    if (expense.userId.toString() !== req.user.id) {
-      return res.status(401).json({ msg: 'Not authorized' });
-    }
-
-    await Expense.findByIdAndDelete(req.params.id);
     res.json({ msg: 'Expense removed' });
   } catch (err) {
     console.error(err.message);

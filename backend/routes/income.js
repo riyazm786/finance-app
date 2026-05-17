@@ -20,7 +20,7 @@ router.get('/', auth, async (req, res) => {
 // @desc    Add income record
 // @access  Private
 router.post('/', auth, async (req, res) => {
-  const { amount, source, month, year } = req.body;
+  const { amount, source, month, year, description, date } = req.body;
 
   try {
     const newIncome = new Income({
@@ -28,7 +28,9 @@ router.post('/', auth, async (req, res) => {
       amount,
       source,
       month,
-      year
+      year,
+      description,
+      date
     });
 
     const income = await newIncome.save();
@@ -44,14 +46,9 @@ router.post('/', auth, async (req, res) => {
 // @access  Private
 router.delete('/:id', auth, async (req, res) => {
   try {
-    let income = await Income.findById(req.params.id);
-    if (!income) return res.status(404).json({ msg: 'Income not found' });
+    const income = await Income.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
+    if (!income) return res.status(404).json({ msg: 'Income not found or not authorized' });
 
-    if (income.userId.toString() !== req.user.id) {
-      return res.status(401).json({ msg: 'Not authorized' });
-    }
-
-    await Income.findByIdAndDelete(req.params.id);
     res.json({ msg: 'Income removed' });
   } catch (err) {
     console.error(err.message);

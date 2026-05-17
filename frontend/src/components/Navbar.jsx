@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Wallet, LayoutDashboard, Calculator, Briefcase, BarChart2, User, Landmark, History as HistoryIcon } from 'lucide-react';
+import { Wallet, LayoutDashboard, Calculator, Briefcase, BarChart2, User, Landmark, History as HistoryIcon, TrendingUp } from 'lucide-react';
 
 export default function Navbar() {
   const location = useLocation();
@@ -15,6 +15,7 @@ export default function Navbar() {
         <div className="navbar-links" style={{ display: 'flex', alignItems: 'center' }}>
           <Link to="/" className={`nav-link ${isActive('/')}`}>Dashboard</Link>
           <Link to="/portfolio" className={`nav-link ${isActive('/portfolio')}`}>Portfolio</Link>
+          <Link to="/income" className={`nav-link ${isActive('/income')}`}>Income</Link>
           <Link to="/history" className={`nav-link ${isActive('/history')}`}>History</Link>
           <Link to="/emi" className={`nav-link ${isActive('/emi')}`}>EMI Calc</Link>
           <Link to="/tax" className={`nav-link ${isActive('/tax')}`}>Tax Calc</Link>
@@ -36,6 +37,10 @@ export default function Navbar() {
         <Link to="/portfolio" className={`mobile-nav-item ${isActive('/portfolio')}`}>
           <Briefcase size={24} />
           <span>Portfolio</span>
+        </Link>
+        <Link to="/income" className={`mobile-nav-item ${isActive('/income')}`}>
+          <TrendingUp size={24} />
+          <span>Income</span>
         </Link>
         <Link to="/history" className={`mobile-nav-item ${isActive('/history')}`}>
           <HistoryIcon size={24} />

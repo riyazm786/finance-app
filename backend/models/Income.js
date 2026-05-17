@@ -5,7 +5,9 @@ const IncomeSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
   source: { type: String, required: true },
   month: { type: String, required: true }, // format YYYY-MM
-  year: { type: Number, required: true }
+  year: { type: Number, required: true },
+  description: { type: String },
+  date: { type: String }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Income', IncomeSchema);
